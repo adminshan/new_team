@@ -9,6 +9,7 @@ use App\Model\AdminModel;
 use App\Model\NavModel;
 use App\Model\CateModel;
 use App\Model\PowerModel;
+use App\Model\RoleUser;
 class AdminController extends Controller
 {
     public function index(){
@@ -20,24 +21,55 @@ class AdminController extends Controller
     public function welcome(){
         return view('admin.welcome');
     }
+    //管理员添加
     public function adminadd(){
         $list=RoleModel::all()->toArray();
         return view('admin.adminadd',['data'=>$list]);
     }
+    //管理员修改
     public function adminUpdate($uid){
         $data=RoleModel::all()->toArray();
         $adminrole=AdminModel::where(['uid'=>$uid])->first();
+        $roleInfo=RoleUser::where(['uid'=>$uid])->pluck('role_id')->toarray();
         $info=[
             'data'=>$data,
-            'adminrole'=>$adminrole
+            'adminrole'=>$adminrole,
+            'roleInfo'=>$roleInfo
         ];
         return view('admin.adminupdate',$info);
+    }
+    //管理员角色展示
+    public function userrole($uid){
+        $data=RoleModel::all()->toArray();
+        $list=RoleUser::where(['uid'=>$uid])->pluck('role_id')->toarray();
+        $info=[
+            'data'=>$data,
+            'adminrole'=>$list,
+        ];
+        return view('admin.admin_role',$info);
     }
     public function pwdupdate(){
         return view('admin.pwdupdate');
     }
+    //展示权限
+    public function getSon($data,$pid=0){
+        $powerInfo=[];
+        foreach($data as $k=>$v){
+            if($v['pid']==$pid){
+                $son=$this->getSon($data,$v['action_id']);
+                $v['son']=$son;
+                $powerInfo[]=$v;
+            }
+        }
+        return $powerInfo;
+    }
     public function adminrole(){
-        return view('admin.roleadd');
+        $info = PowerModel::all()->toarray();
+        $powerInfo=$this->getSon($info);
+        $data=[
+            'powerInfo'=>$powerInfo
+        ];
+        return view('admin.roleadd',$data);
     }
     public function rolelist(){
         $roleDate=RoleModel::all()->toArray();

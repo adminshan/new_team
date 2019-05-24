@@ -30,48 +30,48 @@
 </head>
 <body>
 <article class="page-container">
-    <form action="" method="post" class="form form-horizontal" id="form-admin-role-add">
+    <div class="form form-horizontal" id="form-admin-role-add">
         <div class="row cl">
-            <label class="form-label col-xs-4 col-sm-3"><span class="c-red">*</span>权限名称：</label>
+            <label class="form-label col-xs-4 col-sm-3"><span class="c-red">*</span>角色名称：</label>
             <div class="formControls col-xs-8 col-sm-9">
                 <input type="text" class="input-text" value="" placeholder="" id="roleName" name="roleName">
             </div>
         </div>
         <div class="row cl">
-            <label class="form-label col-xs-4 col-sm-3"><span class="c-red">*</span>路由方法：</label>
+            <label class="form-label col-xs-4 col-sm-3"><span class="c-red">*</span>备注：</label>
             <div class="formControls col-xs-8 col-sm-9">
-                <input type="text" class="input-text" value="" placeholder="" id="" name="">
+                <input type="text" class="input-text"  id="content">
             </div>
         </div>
         <div class="row cl">
             <label class="form-label col-xs-4 col-sm-3"><span class="c-red">*</span>网站角色：</label>
             <div class="formControls col-xs-8 col-sm-9">
+                @foreach($powerInfo as $k=>$v)
                 <dl class="permission-list">
                     <dt>
                         <label>
-                            <input type="checkbox" value="" name="user-Character-0" id="user-Character-0">资讯管理
+                            <input type="checkbox" value="{{$v['action_id']}}" name="user-Character-0" id="user-Character-0">{{$v['action_name']}}
                         </label>
                     </dt>
-                    <dd>
-                        <dl class="cl permission-list2">
-                    <dd>
-                        <label class="">
-                            <input type="checkbox" value="" name="user-Character-0-1-0" id="user-Character-0-1-0">
-                            添加
-                        </label>
-                    </dd>
+                    @foreach($v['son'] as $keys=>$value)
+                    <dl class="cl permission-list2">
+                        <dd>
+                            <label class="">
+                                <input type="checkbox" value="{{$value['action_id']}}" name="user-Character-0-1-0" id="user-Character-0-1-0">
+                                {{$value['action_name']}}
+                            </label>
+                        </dd>
+                    </dl>
+                    @endforeach
                 </dl>
-                </dd>
-                </dl>
-                </dd>
-                </dl>
+                @endforeach
             </div>
-            <div class="row cl">
-                <label class="form-label col-xs-4 col-sm-3"><span class="c-red">*</span>是否展示：</label>
-                <div class="formControls col-xs-8 col-sm-9">
-                    <input type="radio" name="is_show" value="1">是
-                    <input type="radio" name="is_show" value="2">否
-                </div>
+        </div>
+        <div class="row cl">
+            <label class="form-label col-xs-4 col-sm-3"><span class="c-red">*</span>是否展示：</label>
+            <div class="formControls col-xs-8 col-sm-9">
+                <input type="radio" name="is_show" value="1">是
+                <input type="radio" name="is_show" value="2">否
             </div>
         </div>
         <div class="row cl">
@@ -79,7 +79,7 @@
                 <button type="submit" class="btn btn-success radius" id="admin-role-save" name="admin-role-save"><i class="icon-ok"></i> 确定</button>
             </div>
         </div>
-    </form>
+    </div>
 </article>
 
 <!--_footer 作为公共模版分离出去-->
@@ -123,12 +123,34 @@
             onkeyup:false,
             focusCleanup:true,
             success:"valid",
-            submitHandler:function(form){
-                $(form).ajaxSubmit();
-                var index = parent.layer.getFrameIndex(window.name);
-                parent.layer.close(index);
-            }
         });
+        $('.btn').click(function(){
+            var role_name=$('#roleName').val();
+            var content=$('#content').val();
+            var action_id = "";
+            $("input:checkbox:checked").each(function () {
+                action_id+=$(this).val()+',';
+
+            })
+            action_id = action_id.slice(0,action_id.length-1);
+            var data ={};
+
+            data.role_name = role_name;
+            data.action_id = action_id;
+            data.content = content;
+            $.ajax({
+                url:"/role/do",
+                type:"post",
+                data:data,
+                dataType:"json",
+                success:function(data){
+                    alert(data.msg);
+                    if(data.code ==0){
+                        location.href ="/roleList";
+                    }
+                }
+            })
+        })
     });
 </script>
 <!--/请在上方写此页面业务相关的脚本-->

@@ -45,7 +45,7 @@
             <th width="150">登录名</th>
             <th width="90">手机</th>
             <th width="150">邮箱</th>
-            <th>角色</th>
+            {{--<th>角色</th>--}}
             <th width="130">加入时间</th>
             <th width="130">最后登录时间</th>
             <th width="100">操作</th>
@@ -59,7 +59,7 @@
             <td>{{$v['uname']}}</td>
             <td>{{$v['tel']}}</td>
             <td>{{$v['email']}}</td>
-            <td>{{$v['role_name']}}</td>
+            {{--<td>{{$v['role_name']}}</td>--}}
             <td>{{date('Y-m-d H:i:s',$v['add_time'])}}</td>
             @if(!empty($v['last_login_time']))
                 <td>{{date('Y-m-d H:i:s',$v['last_login_time'])}}</td>
@@ -72,6 +72,9 @@
                 </a>
                 <a title="删除" class="del" uid="{{$v['uid']}}"  href="javascript:;" >
                     <i class="Hui-iconfont">&#xe6e2;</i>
+                </a>
+                <a  href="/userrole/{{$v['uid']}}" >
+                    角色
                 </a>
             </td>
         </tr>

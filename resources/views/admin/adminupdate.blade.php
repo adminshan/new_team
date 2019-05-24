@@ -48,16 +48,15 @@
         <div class="row cl">
             <label class="form-label col-xs-4 col-sm-3">角色：</label>
             <div class="formControls col-xs-8 col-sm-9">
-			<select class="role_id" name="adminRole" size="1">
-                <option value="0">--请选择--</option>
-                @foreach($data as $k=>$v)
-                    @if($v['role_id']==$adminrole['role_id'])
-                        <option value="{{$v['role_id']}}" selected>{{$v['role_name']}}</option>
-                    @else
-                        <option value="{{$v['role_id']}}">{{$v['role_name']}}</option>
-                    @endif
+                @foreach($data as $keys=>$value)
+                    <label class="">
+                        @if(in_array($value['role_id'],$roleInfo)==true)
+                            <input type="checkbox" value="{{$value['role_id']}}" checked name="user-Character-0-1-0" id="user-Character-0-1-0">{{$value['role_name']}}
+                        @else
+                            <input type="checkbox" value="{{$value['role_id']}}" name="user-Character-0-1-0" id="user-Character-0-1-0">{{$value['role_name']}}
+                        @endif
+                    </label>
                 @endforeach
-            </select>
 			 </div>
         </div>
 
@@ -123,7 +122,12 @@
                 alert('邮箱不能为空');
                 return  false;
             }
-            var role_id=$('.role_id').val();
+            var role_id = "";
+            $("input:checkbox:checked").each(function () {
+                role_id+=$(this).val()+',';
+
+            })
+            role_id = role_id.slice(0,role_id.length-1);
             $.ajax({
                 url:"/adminupd/do",
                 type:"post",

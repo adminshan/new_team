@@ -21,6 +21,8 @@ Route::get('/adminlogin','Admin\AdminController@admin');
 Route::post('/login/do','Admin\UserController@checkLogin');
 //管理员列表
 Route::get('/adminlist','Admin\UserController@adminList');
+//管理员角色
+Route::get('/userrole/{uid}','Admin\AdminController@userrole');
 //管理员添加
 Route::get('/adminadd','Admin\AdminController@adminadd');
 Route::post('/add/do','Admin\UserController@adminAddDo');
@@ -45,6 +47,8 @@ Route::get('/poweradd','Admin\AdminController@poweradd');
 Route::post('/poweradd/do','Admin\UserController@checkpower');
 //权限展示
 Route::get('/powerlist','Admin\AdminController@powerlist');
+//权限删除
+Route::post('/powerDel','Admin\UserController@powerDel');
 //导航栏添加
 Route::get('/articleadd','Admin\AdminController@articleadd');
 Route::post('/articleadd/do','Admin\UserController@checkarticle');

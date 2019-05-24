@@ -51,7 +51,14 @@
             <td>{{$v['action_id']}}</td>
             <td>{{$v['action_name']}}</td>
             <td>{{$v['action_url']}}</td>
-            <td><a title="编辑" href="javascript:;" onclick="admin_permission_edit('角色编辑','admin-permission-add.html','1','','310')" class="ml-5" style="text-decoration:none"><i class="Hui-iconfont">&#xe6df;</i></a> <a title="删除" href="javascript:;" onclick="admin_permission_del(this,'1')" class="ml-5" style="text-decoration:none"><i class="Hui-iconfont">&#xe6e2;</i></a></td>
+            <td>
+                <a title="编辑" href="/powerupdate/{{$v['action_id']}}" >
+                    <i class="Hui-iconfont">&#xe6df;</i>
+                </a>
+                <a title="删除" href="javascript:;" class="del" action_id="{{$v['action_id']}}">
+                    <i class="Hui-iconfont">&#xe6e2;</i>
+                </a>
+            </td>
         </tr>
         @endforeach
         </tbody>
@@ -66,40 +73,25 @@
 <!--请在下方写此页面业务相关的脚本-->
 <script type="text/javascript" src="lib/datatables/1.10.0/jquery.dataTables.min.js"></script>
 <script type="text/javascript">
-    /*
-     参数解释：
-     title	标题
-     url		请求的url
-     id		需要操作的数据id
-     w		弹出层宽度（缺省调默认值）
-     h		弹出层高度（缺省调默认值）
-     */
-    /*管理员-权限-添加*/
-    function admin_permission_add(title,url,w,h){
-        layer_show(title,url,w,h);
-    }
-    /*管理员-权限-编辑*/
-    function admin_permission_edit(title,url,id,w,h){
-        layer_show(title,url,w,h);
-    }
+    //删除
+    $(document).on('click','.del',function(){
+        var action_id=$(this).attr('action_id');
+        //alert(role_id)
+        $.ajax({
+            url:"/powerDel",
+            type:"post",
+            data:{action_id:action_id},
+            dataType:"json",
+            success:function(data){
+                alert(data.msg)
+                if(data.code ==0){
+                    location.href ="/powerlist";
+                }
+            }
+        })
+    })
 
-    /*管理员-权限-删除*/
-    function admin_permission_del(obj,id){
-        layer.confirm('确认要删除吗？',function(index){
-            $.ajax({
-                type: 'POST',
-                url: '',
-                dataType: 'json',
-                success: function(data){
-                    $(obj).parents("tr").remove();
-                    layer.msg('已删除!',{icon:1,time:1000});
-                },
-                error:function(data) {
-                    console.log(data.msg);
-                },
-            });
-        });
-    }
+
 </script>
 </body>
 </html>

@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Model\AdminModel;
 use App\Model\NavModel;
+use App\Model\RolePower;
+use App\Model\RoleUser;
+use Illuminate\Support\Facades\DB;
 class  UserController extends Controller
 {
     public function checkLogin(Request $request){
@@ -40,6 +43,7 @@ class  UserController extends Controller
             echo json_encode($resopnse);
         }
     }
+    //管理员添加
     public function adminAddDo(Request $request){
         $data = $request->input();
         $uname=$data['uname'];
@@ -51,64 +55,79 @@ class  UserController extends Controller
             ];
             echo json_encode($resopnse);die;
         }
-        //入管理员表
-        $adminData =[
-            'uname'=>$data['uname'],
-            'pwd'=>md5($data['pwd']),
-            'tel'=>$data['tel'],
-            'email'=>$data['email'],
-            'role_id'=>$data['role_id'],
-            'add_time'=>time(),
-        ];
-        $res =AdminModel::insertGetId($adminData);
-        if($res){
-            $resopnse=[
-                'code'=>0,
-                'msg'=>'添加成功'
+        //开启事务
+        DB::beginTransaction();
+        try{
+            //入管理员表
+            $adminData =[
+                'uname'=>$data['uname'],
+                'pwd'=>md5($data['pwd']),
+                'tel'=>$data['tel'],
+                'email'=>$data['email'],
+                'add_time'=>time(),
             ];
-            echo json_encode($resopnse);die;
+            $uid =AdminModel::insertGetId($adminData);
+            if($uid  <0){
+                throw new \Exception('管理员表写入失败');
+            }
+            $role_id_arr=explode(',',$data['role_id']);
+            $role_arr =[];
+            foreach($role_id_arr as $k=>$v){
+                $role_arr[$k]['uid']=$uid;
+                $role_arr[$k]['role_id']=$v;
+            }
+            RoleUser::insert($role_arr);
+            //提交事务
+            DB::commit();
+            return json_encode(['code'=>0,'msg'=>'添加成功']);
+        }catch(\Exception $e){
+            //回滚
+            DB::rollback();
+            throw $e;
         }
     }
+    //管理员展示
     public function adminList(){
         $adminList=AdminModel::all()->toArray();
-        $adminInfo=[];
-        foreach($adminList as $k=>$v){
-            $where=[
-                'role_id'=>$v['role_id']
-            ];
-            $role_name=RoleModel::where($where)->first();
-            $data['uid']=$v['uid'];
-            $data['uname']=$v['uname'];
-            $data['tel']=$v['tel'];
-            $data['email']=$v['email'];
-            $data['role_name']=$role_name['role_name'];
-            $data['add_time']=$v['add_time'];
-            $data['last_login_time']=$v['last_login_time'];
-            $adminInfo[]=$data;
-        }
-        return view('admin.adminlist',['adminInfo'=>$adminInfo]);
+//        $adminInfo=[];
+//        foreach($adminList as $k=>$v){
+//            $where=[
+//                'role_id'=>$v['role_id']
+//            ];
+//            $role_name=RoleModel::where($where)->first();
+//            $data['uid']=$v['uid'];
+//            $data['uname']=$v['uname'];
+//            $data['tel']=$v['tel'];
+//            $data['email']=$v['email'];
+//            $data['role_name']=$role_name['role_name'];
+//            $data['add_time']=$v['add_time'];
+//            $data['last_login_time']=$v['last_login_time'];
+//            $adminInfo[]=$data;
+//        }
+        return view('admin.adminlist',['adminInfo'=>$adminList]);
     }
     //管理员删除
     public function adminDel(Request $request){
         $uid=$request->input('uid');
+        //开启事务
+        DB::beginTransaction();
+        try{
             $where=[
                 'uid'=>$uid
             ];
-        $res=AdminModel::where($where)->delete();
-        if($res){
-            $arr = [
-                'code' => 0,
-                'msg' => '删除成功'
-            ];
-            echo json_encode($arr);
-        }else{
-            $arr = [
-                'code' => 4003,
-                'msg' => '删除失败'
-            ];
-            echo json_encode($arr);die;
+            AdminModel::where($where)->delete();
+            RoleUser::where($where)->delete();
+            //提交事务
+            DB::commit();
+            return json_encode(['code'=>0,'msg'=>'删除成功']);
+        }catch(\Exception $e){
+            //回滚
+            DB::rollback();
+            throw $e;
         }
+
     }
+    //修改密码
     public function adminPwd(Request $request){
         $pwd=$request->input('pwd');
         $pd2=$request->input('new_pwd');
@@ -135,22 +154,37 @@ class  UserController extends Controller
             }
         }
     }
+    //管理员修改
     public function adminUpdateDo(Request $request){
-        $data = $request->input();
-       // print_r($data);die;
-        $uname=$data['uname'];
-        $adminData =[
-            'tel'=>$data['tel'],
-            'email'=>$data['email'],
-            'role_id'=>$data['role_id'],
-        ];
-        $res =$info=AdminModel::where(['uname'=>$uname])->update($adminData);;
-        if($res){
-            $resopnse=[
-                'code'=>0,
-                'msg'=>'修改成功'
+        $role_id = $request->input('role_id');
+        $uname = $request->input('uname');
+        //开启事务
+        DB::beginTransaction();
+        try{
+            $where=[
+                'uname'=>$uname
             ];
-            echo json_encode($resopnse);die;
+            $adminData =[
+                'tel'=>$request->input('tel'),
+                'email'=>$request->input('email'),
+            ];
+            AdminModel::where($where)->update($adminData);
+            $data=AdminModel::where($where)->first();
+            RoleUser::where(['uid'=>$data['uid']])->delete();
+            $role_id_arr=explode(',',$role_id);
+            $role_arr =[];
+            foreach($role_id_arr as $k=>$v){
+                $role_arr[$k]['uid']=$data['uid'];
+                $role_arr[$k]['role_id']=$v;
+            }
+            RoleUser::insert($role_arr);//加入关联表
+            //提交事务
+            DB::commit();
+            return json_encode(['code'=>0,'msg'=>'修改成功']);
+        }catch(\Exception $e){
+            //回滚
+            DB::rollback();
+            throw $e;
         }
     }
     //权限添加
@@ -192,6 +226,68 @@ class  UserController extends Controller
             ];
             echo json_encode($arr);
             die;
+        }
+    }
+    //权限删除
+    public function powerDel(Request $request){
+        $action_id=$request->input('action_id');
+        $where=[
+            'action_id'=>$action_id
+        ];
+        //print_r($where);die;
+        $res=PowerModel::where($where)->delete();
+        if($res){
+            $arr = [
+                'code' => 0,
+                'msg' => '删除成功'
+            ];
+            echo json_encode($arr);
+        }else{
+            $arr = [
+                'code' => 4003,
+                'msg' => '删除失败'
+            ];
+            echo json_encode($arr);die;
+        }
+    }
+    //执行添加角色
+    public function checkRole(Request $request){
+        $data=$request->input();
+        //print_r($data);die;
+        DB::beginTransaction();
+        try{
+            //入角色表
+            $roleData =[
+                'role_name'=>$data['role_name'],
+                'content'=>$data['content'],
+            ];
+            $roleinfo=RoleModel::where($roleData)->first();
+            if($roleinfo){
+                $arr = [
+                    'code' => 404,
+                    'msg' => '角色已存在'
+                ];
+                echo json_encode($arr);
+                die;
+            }
+            $role_id =RoleModel::insertGetId($roleData);
+            if($role_id  <0){
+                throw new \Exception('角色表写入失败');
+            }
+            $action_id_arr=explode(',',$data['action_id']);
+            $action_arr =[];
+            foreach($action_id_arr as $k=>$v){
+                $action_arr[$k]['role_id']=$role_id;
+                $action_arr[$k]['action_id']=$v;
+            }
+            RolePower::insert($action_arr);//加入关联表
+            //提交事务
+            DB::commit();
+            return json_encode(['code'=>0,'msg'=>'添加成功']);
+        }catch(\Exception $e){
+            //回滚
+            DB::rollback();
+            throw $e;
         }
     }
     //导航栏添加

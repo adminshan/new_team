@@ -19,7 +19,7 @@
     <script type="text/javascript" src="lib/DD_belatedPNG_0.0.8a-min.js" ></script>
     <script>DD_belatedPNG.fix('*');</script>
     <![endif]-->
-    <title>添加管理员 - 管理员管理 </title>
+    <title> 管理员-角色 </title>
     <meta name="keywords" content="H-ui.admin v3.1,H-ui网站后台模版,后台模版下载,后台管理系统模版,HTML后台模版下载">
     <meta name="description" content="H-ui.admin v3.1，是一款由国人开发的轻量级扁平化网站后台模板，完全免费开源的网站后台管理系统模版，适合中小型CMS后台系统。">
 </head>
@@ -29,48 +29,41 @@
         <div class="row cl">
             <label class="form-label col-xs-4 col-sm-3"><span class="c-red">*</span>管理员账号：</label>
             <div class="formControls col-xs-8 col-sm-9">
-                <input type="text" class="input-text"  name="adminName">
+                <input type="text" class="input-text" readonly  name="adminName" value="{{$adminrole['uname']}}">
             </div>
         </div>
-        <div class="row cl">
-            <label class="form-label col-xs-4 col-sm-3"><span class="c-red">*</span>初始密码：</label>
-            <div class="formControls col-xs-8 col-sm-9">
-                <input type="password" class="input-text" autocomplete="off"   name="password">
-            </div>
-        </div>
-        <div class="row cl">
-            <label class="form-label col-xs-4 col-sm-3"><span class="c-red">*</span>确认密码：</label>
-            <div class="formControls col-xs-8 col-sm-9">
-                <input type="password" class="input-text" autocomplete="off" name="password2">
-            </div>
-        </div>
+
         <div class="row cl">
             <label class="form-label col-xs-4 col-sm-3"><span class="c-red">*</span>手机：</label>
             <div class="formControls col-xs-8 col-sm-9">
-                <input type="text" class="input-text"  name="phone">
+                <input type="text" class="input-text"  name="phone" value="{{$adminrole['tel']}}">
             </div>
         </div>
         <div class="row cl">
             <label class="form-label col-xs-4 col-sm-3"><span class="c-red">*</span>邮箱：</label>
             <div class="formControls col-xs-8 col-sm-9">
-                <input type="text" class="input-text"  name="email">
+                <input type="text" class="input-text"  name="email" value="{{$adminrole['email']}}">
             </div>
         </div>
         <div class="row cl">
             <label class="form-label col-xs-4 col-sm-3">角色：</label>
             <div class="formControls col-xs-8 col-sm-9">
-                @foreach($data as $keys=>$value)
-                    <label class="">
-                        <input type="checkbox" value="{{$value['role_id']}}" name="user-Character-0-1-0" id="user-Character-0-1-0">
-                        {{$value['role_name']}}
-                    </label>
-                @endforeach
-			 </div>
+                <select class="role_id" name="adminRole" size="1">
+                    <option value="0">--请选择--</option>
+                    @foreach($data as $k=>$v)
+                        @if($v['role_id']==$adminrole['role_id'])
+                            <option value="{{$v['role_id']}}" selected>{{$v['role_name']}}</option>
+                        @else
+                            <option value="{{$v['role_id']}}">{{$v['role_name']}}</option>
+                        @endif
+                    @endforeach
+                </select>
+            </div>
         </div>
 
         <div class="row cl">
             <div class="col-xs-8 col-sm-9 col-xs-offset-4 col-sm-offset-3">
-                <input class="btn btn-primary radius" type="submit" value="&nbsp;&nbsp;提交&nbsp;&nbsp;">
+                <input class="btn btn-primary radius" type="submit" value="&nbsp;&nbsp;修改&nbsp;&nbsp;">
             </div>
         </div>
     </div>
@@ -120,24 +113,6 @@
         });
         $('.btn').click(function(){
             var uname = $("input[name='adminName']").val();
-            if(uname==''){
-                alert('管理员账号不能为空');
-                return  false;
-            }
-            var pwd = $("input[name='password']").val();
-            if(pwd==''){
-                alert('密码不能为空');
-                return  false;
-            }
-            var pwd2 = $("input[name='password2']").val();
-            if(pwd2==''){
-                alert('确认密码不能为空');
-                return  false;
-            }
-            if(pwd!==pwd2){
-                alert('确认密码必须与密码一致');
-                return  false;
-            }
             var tel = $("input[name='phone']").val();
             if(tel==''){
                 alert('手机号不能为空');
@@ -148,16 +123,11 @@
                 alert('邮箱不能为空');
                 return  false;
             }
-            var role_id = "";
-            $("input:checkbox:checked").each(function () {
-                role_id+=$(this).val()+',';
-
-            })
-            role_id = role_id.slice(0,role_id.length-1);
+            var role_id=$('.role_id').val();
             $.ajax({
-                url:"/add/do",
+                url:"/adminupd/do",
                 type:"post",
-                data:{uname:uname,pwd:pwd,tel:tel,email:email,role_id:role_id},
+                data:{uname:uname,tel:tel,email:email,role_id:role_id},
                 dataType:"json",
                 success:function(data){
                     alert(data.msg);
